@@ -28,21 +28,32 @@ services:
     networks:
       - app_network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
 
   ollama-setup:
     image: ollama/ollama:latest
     container_name: ollama-setup
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
     networks:
       - app_network
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
     entrypoint: /bin/sh
     command:
       - -c
       - |
-        sleep 10
-        ollama pull llama3.2
-        echo "Model downloaded successfully"
+        echo "Connecting to Ollama at $OLLAMA_HOST..."
+        echo "Pulling model gemma2:9b..."
+        ollama pull gemma2:9b
+        echo "Model downloaded successfully!"
+        ollama list
     restart: "no"
 
   backend:
