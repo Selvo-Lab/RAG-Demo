@@ -6,6 +6,8 @@ import os
 import tempfile
 import shutil
 from pathlib import Path
+import time
+import requests
 from llama_index.core import (
     VectorStoreIndex,
     Document,
@@ -39,7 +41,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 
-Settings.llm = Ollama(model="llama3.2", base_url=OLLAMA_BASE_URL, request_timeout=120.0)
+Settings.llm = Ollama(model="gemma2:9b", base_url=OLLAMA_BASE_URL, request_timeout=180.0)
 Settings.embed_model = HuggingFaceEmbedding(
     model_name="BAAI/bge-small-en-v1.5",
     cache_folder="./model_cache"
@@ -47,11 +49,33 @@ Settings.embed_model = HuggingFaceEmbedding(
 Settings.chunk_size = 512
 Settings.chunk_overlap = 50
 
+def wait_for_chromadb(host, port, max_retries=60, delay=2):
+    """Wait for ChromaDB to be ready"""
+    logger.info(f"Waiting for ChromaDB at {host}:{port}...")
+    
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(f"http://{host}:{port}/api/v2/heartbeat", timeout=5)
+            if response.status_code == 200:
+                logger.info(f"ChromaDB is ready after {attempt + 1} attempts!")
+                return True
+        except Exception as e:
+            logger.info(f"Attempt {attempt + 1}/{max_retries}: Waiting for ChromaDB...")
+            time.sleep(delay)
+    
+    logger.error(f"ChromaDB did not become ready after {max_retries} attempts")
+    raise ConnectionError("Could not connect to ChromaDB")
+
+# Wait for ChromaDB before initializing client
+wait_for_chromadb(CHROMA_HOST, CHROMA_PORT)
+
+# Initialize ChromaDB client
 chroma_client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
 
-# Initialize Docling converter (simplified for v2.x)
+# Initialize Docling converter
 doc_converter = DocumentConverter()
 
+# NOW your existing line:
 query_engine = None
 
 class QueryRequest(BaseModel):
