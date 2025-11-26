@@ -1,4 +1,4 @@
-// File: /home/selvo-lab/Desktop/RAG-Demo/frontend/app/layout.tsx
+// File: C:\Users\radep\OneDrive\Desktop\RAG-DEMO\frontend\app\layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
