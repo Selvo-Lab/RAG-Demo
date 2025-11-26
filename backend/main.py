@@ -46,7 +46,8 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 CHROMA_HOST = os.getenv("CHROMA_HOST", "localhost")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
 
-Settings.llm = Ollama(model="qwen2:7b-instruct-q4_0", base_url=OLLAMA_BASE_URL, request_timeout=180.0)
+Settings.llm = Ollama(model="qwen2:7b-instruct-q4_0", base_url=OLLAMA_BASE_URL, request_timeout=180.0, system_prompt="Odgovaraj isključivo na srpskom jeziku (latinica). " "Ako korisnik koristi drugi jezik, i dalje odgovori na srpskom.",
+temperature=0.2,)
 Settings.embed_model = HuggingFaceEmbedding(
     model_name="BAAI/bge-m3",  # multilingual; better for Serbian queries/passages
     cache_folder="./model_cache",
