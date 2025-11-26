@@ -29,7 +29,12 @@ app = FastAPI(title="Company Knowledge Assistant API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -307,7 +312,16 @@ async def upload_file(file: UploadFile = File(...)):
             with open(temp_file_path, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
             
-            documents = parse_document_with_docling(str(temp_file_path), file.filename)
+            # Skip Docling for simple text-like files to avoid noisy format errors
+            ext = temp_file_path.suffix.lower()
+            if ext in {".txt", ".md", ".csv"}:
+                with open(temp_file_path, "r", encoding="utf-8", errors="ignore") as f:
+                    documents = [Document(
+                        text=f.read(),
+                        metadata={"source": file.filename, "type": "fallback"}
+                    )]
+            else:
+                documents = parse_document_with_docling(str(temp_file_path), file.filename)
             
             if not documents:
                 raise HTTPException(status_code=400, detail="No content extracted from document")
