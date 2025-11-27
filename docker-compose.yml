@@ -45,16 +45,18 @@ services:
       - app_network
     environment:
       - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=qwen2:7b-instruct-q4_0
     entrypoint: /bin/sh
     command:
       - -c
       - |
         echo "Connecting to Ollama at $OLLAMA_HOST..."
-        echo "Pulling model gemma2:9b..."
-        ollama pull gemma2:9b
+        echo "Pulling model $OLLAMA_MODEL..."
+        ollama pull "$OLLAMA_MODEL"
         echo "Model downloaded successfully!"
         ollama list
     restart: "no"
+
 
   backend:
     build:
